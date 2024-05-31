@@ -285,3 +285,5 @@ def manage_inventory():
     print(f"Order Quantity: {order_quantity:.2f} units, Expiry Date: {expiry_date}")
 
 # MAIN HERE
+def main():
+    solve_CVRP
