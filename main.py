@@ -302,12 +302,9 @@ def integrated_inventory():
         return restock_qty
 
 # MAIN HERE
-def main():
+if __name__ == '__main__':
     #check if inventory requires restock
     need_restock = integrated_inventory()
     if (need_restock.bool) :
         #pass restock qty of each store as constraint for CVRP
         solve_CVRP(need_restock)
-
-if __name__ == '__main__':
-    main()
