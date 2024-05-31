@@ -291,7 +291,7 @@ def integrated_inventory():
     print(f"Average ROP: {average_ROP}")
     
     #return array of restock_qty for each store if required
-    if average_stock < average_ROP:
+    if average_stock <= average_ROP:
         store_deficit = inventory_data['Reorder_Point'] - inventory_data['Inventory_Stock']
         
         #account for deficit from reorder point for each store
