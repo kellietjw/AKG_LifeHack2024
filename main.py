@@ -57,10 +57,9 @@ def data_prediction():
     print("Root Mean Squared Error (RMSE) \t:", np.sqrt(mean_squared_error(demand_test, demand_test_pred)))
 
 # CVRP: Store Data
-def create_data_model():
+def create_data_model(demand):
     data = {}
     data["distance_matrix"] = [
-        # fmt: off
         [0, 548, 776, 696, 582, 274, 502, 194, 308, 194, 536, 502, 388, 354, 468, 776, 662],
         [548, 0, 684, 308, 194, 502, 730, 354, 696, 742, 1084, 594, 480, 674, 1016, 868, 1210],
         [776, 684, 0, 992, 878, 502, 274, 810, 468, 742, 400, 1278, 1164, 1130, 788, 1552, 754],
@@ -78,11 +77,11 @@ def create_data_model():
         [468, 1016, 788, 1164, 1050, 514, 514, 662, 320, 274, 388, 650, 536, 342, 0, 764, 194],
         [776, 868, 1552, 560, 674, 1050, 1278, 742, 1084, 810, 1152, 274, 388, 422, 764, 0, 798],
         [662, 1210, 754, 1358, 1244, 708, 480, 856, 514, 468, 354, 844, 730, 536, 194, 798, 0],
-        # fmt: on
     ]
-    data["demands"] = [0, 1, 1, 2, 4, 2, 4, 8, 8, 1, 2, 1, 2, 4, 4, 8, 8]
-    data["vehicle_capacities"] = [20, 10, 25, 30]
+    data["demands"] = demand
+    data["vehicle_capacities"] = [1000, 2000, 3000, 2500]
     data["num_vehicles"] = 4
+    #port location
     data["depot"] = 0
     return data
 
@@ -115,9 +114,9 @@ def print_solution(data, manager, routing, solution):
     print(f"Total load of all routes: {total_load}")
 
 # Solve the CVRP problem.
-def solve_CVRP():
+def solve_CVRP(demand):
     # Instantiate the data problem.
-    data = create_data_model()
+    data = create_data_model(demand)
 
     # Create the routing index manager.
     manager = pywrapcp.RoutingIndexManager(
@@ -261,7 +260,7 @@ def manage_inventory():
     print(f"Safety Stock: {safety_stock:.2f} units")
 
     # Calculate reorder point
-    reorder_point = ltd_selected + safety_stock
+    reorder_point = lead_time_demand + safety_stock
     print(f"Reorder Point: {reorder_point:.2f} units")
 
     # Inventory management function to decide when to order
@@ -274,7 +273,7 @@ def manage_inventory():
         # Check if it's time to reorder
         if total_inventory <= reorder_point:
             order_quantity = reorder_point - total_inventory + ddm_selected * ltd_selected
-            return order_quantity, today + timedelta(days=shelf_life_days)
+            return order_quantity, today + timedelta(days=sld_selected)
         return 0, None
 
     # Example usage:
@@ -284,6 +283,31 @@ def manage_inventory():
     order_quantity, expiry_date = manage_inventory(current_inventory, expiry_dates)
     print(f"Order Quantity: {order_quantity:.2f} units, Expiry Date: {expiry_date}")
 
+def integrated_inventory():
+    inventory_data = pd.read_csv('integrated_inventory_data.csv')
+    average_stock = inventory_data['Inventory_Stock'].mean()
+    average_ROP = inventory_data['Reorder_Point'].mean()
+    print(f"Average Stock: {average_stock}")
+    print(f"Average ROP: {average_ROP}")
+    
+    #return array of restock_qty for each store if required
+    if average_stock < average_ROP:
+        store_deficit = inventory_data['Reorder_Point'] - inventory_data['Inventory_Stock']
+        
+        #account for deficit from reorder point for each store
+        #if store has surplus, restock less; deficit, restock more
+        restock_qty = inventory_data['Order_QTY'] + store_deficit
+        print(restock_qty)
+        print(f"Total Order QTY: {restock_qty.sum()}")
+        return restock_qty
+
 # MAIN HERE
 def main():
-    solve_CVRP
+    #check if inventory requires restock
+    need_restock = integrated_inventory()
+    if (need_restock.bool) :
+        #pass restock qty of each store as constraint for CVRP
+        solve_CVRP(need_restock)
+
+if __name__ == '__main__':
+    main()
