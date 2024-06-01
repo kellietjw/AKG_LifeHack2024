@@ -214,6 +214,7 @@ def delete_row():
 
 def manage_inventory():
     while True:
+        display_df()
         action = input("\nChoose an action: (1) Add Row (2) Delete Row (3) Select Row (4) Exit: ")
         
         if action == '1':
