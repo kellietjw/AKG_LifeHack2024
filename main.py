@@ -303,11 +303,22 @@ def integrated_inventory():
 
 # MAIN HERE
 def main():
-    #check if inventory requires restock
-    need_restock = integrated_inventory()
-    if (need_restock.bool):
-        #pass restock qty of each store as constraint for CVRP
-        solve_CVRP(need_restock)
+    while True:
+        x = input("\nChoose an action: (1) Data Prediction (2) Optimise Logistics and Manage Inventory (3) Exit: ")
+        
+        if x == '1':
+            data_prediction()
+        elif x == '2':
+            #check if inventory requires restock
+            need_restock = integrated_inventory()
+            if (need_restock.bool):
+                #pass restock qty of each store as constraint for CVRP
+                solve_CVRP(need_restock)
+        elif x == '3':
+            print("Exiting...")
+            break
+        else:
+            print("Invalid choice. Please try again.")
 
 if __name__ == '__main__':
     main()
